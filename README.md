@@ -106,7 +106,7 @@ alembic upgrade head
   "amount": 1
 }**
 
-- -**{
+- **{
   "operation_type": "WITHDRAW",
   "amount": 1
 }**
