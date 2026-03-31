@@ -1,0 +1,69 @@
+from typing import Annotated
+from uuid import UUID
+
+from dishka import FromDishka
+from dishka.integrations.fastapi import DishkaRoute
+from fastapi import APIRouter, Path, HTTPException, Depends
+from starlette import status
+
+from clean_backend.application.dto import NewUser
+from clean_backend.application.interactors import GetUserInteractor, GetUsersInteractor, CreateUserInteractor
+from clean_backend.controllers.schemas import UserRead, UserCreate
+from clean_backend.domain.user import User
+
+router = APIRouter(
+    prefix="/users",
+    tags=["users"],
+    route_class=DishkaRoute,
+)
+
+
+@router.get(
+    "/{user_id}/",
+    response_model=UserRead,
+)
+async def get_user_by_id(
+    user_id: Annotated[
+        UUID,
+        Path(description="User ID", title="User ID"),
+    ],
+    get_user: FromDishka[GetUserInteractor],
+) -> User:
+    user = await get_user(user_id)
+    if user is not None:
+        return user
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"User {user_id} not found.",
+    )
+
+
+@router.get(
+    "/",
+    response_model=list[UserRead],
+)
+async def get_users_view(
+    get_users: FromDishka[GetUsersInteractor],
+) -> list[User]:
+    return await get_users()
+
+
+def new_user_dep(
+    user_create: UserCreate,
+) -> NewUser:
+    return NewUser(
+        username=user_create.username,
+    )
+
+
+@router.post(
+    "/",
+    response_model=UserRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_user_view(
+    new_user: Annotated[NewUser, Depends(new_user_dep)],
+    create_user: FromDishka[CreateUserInteractor],
+) -> User:
+    return await create_user(new_user)

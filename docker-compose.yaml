@@ -1,0 +1,98 @@
+services:
+
+  app:
+    build:
+      dockerfile: "./Dockerfile"
+      context: ./
+    container_name: app
+    environment:
+      BACKEND__DB__PG__HOST: pg
+      BACKEND__DB__PG__PORT: 5432
+      BACKEND__DB__PG__USER: $PG_USER
+      BACKEND__DB__PG__PASSWORD: $PG_PASSWORD
+      # На случай, если где-то используется строка подключения.
+      DB_URL: $DB_URL
+
+      BACKEND__BROKER__RABBIT__HOST: rabbitmq
+      BACKEND__BROKER__RABBIT__PORT: 5672
+      BACKEND__BROKER__RABBIT__VIRTUALHOST: /
+      BACKEND__BROKER__RABBIT__USERNAME: guest
+      BACKEND__BROKER__RABBIT__PASSWORD: guest
+    ports:
+      - "5050:8000"
+    depends_on:
+      - pg
+      - rabbitmq
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://127.0.0.1:8000/docs" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  pg:
+    image: postgres:18.1-alpine
+    environment:
+      PGDATA: /var/lib/postgresql/18/docker
+      POSTGRES_DB: $PG_DB
+      POSTGRES_USER: $PG_USER
+      POSTGRES_PASSWORD: $PG_PASSWORD
+    volumes:
+      - pgdata:/var/lib/postgresql/18/docker
+      - ./pg-init-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "5443:5432"
+#    healthcheck:
+#      test: [ "CMD-SHELL", "pg_isready" ]
+#      interval: 3s
+#      timeout: 1s
+#      retries: 5
+
+  # Separate Postgres for tests.
+  pg_test:
+    image: postgres:18.1-alpine
+    environment:
+      PGDATA: /var/lib/postgresql/18/docker
+      POSTGRES_DB: $PG_TEST_DB
+      POSTGRES_USER: $PG_TEST_USER
+      POSTGRES_PASSWORD: $PG_TEST_PASSWORD
+    volumes:
+      - pgdata_test:/var/lib/postgresql/18/docker
+      - ./pg-init-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "5444:5432"
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+
+  faststream_app:
+    build: .
+    entrypoint: []  # отключаем prestart.sh, чтобы не запускались миграции
+    environment:
+        BACKEND__DB__PG__HOST: pg
+        BACKEND__DB__PG__PORT: 5432
+        BACKEND__DB__PG__USER: ${PG_USER}
+        BACKEND__DB__PG__PASSWORD: ${PG_PASSWORD}
+
+        BACKEND__BROKER__RABBIT__HOST: rabbitmq
+        BACKEND__BROKER__RABBIT__PORT: 5672
+        BACKEND__BROKER__RABBIT__VIRTUALHOST: /
+        BACKEND__BROKER__RABBIT__USERNAME: guest
+        BACKEND__BROKER__RABBIT__PASSWORD: guest
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  pgdata_test:
+  rabbitmq-data:

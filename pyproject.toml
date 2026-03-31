@@ -1,0 +1,15 @@
+[project]
+name = "clean-arc"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "clean-backend",
+]
+
+[tool.uv.workspace]
+members = [
+    "clean-backend",
+]
+
+[tool.uv.sources]
+clean-backend = { workspace = true }
