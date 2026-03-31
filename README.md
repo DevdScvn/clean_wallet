@@ -4,7 +4,7 @@
 
 ### 1. Клонируйте репозиторий и перейдите в каталог
 ```bash
-git clone 
+git clone https://github.com/DevdScvn/clean_wallet.git
 ```
 ```bash
 cd clean-backend
