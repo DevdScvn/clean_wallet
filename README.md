@@ -99,12 +99,20 @@ alembic upgrade head
 
 4. Добавьте/Убавьте необходимое количество суммы по ресурсу POST /api/v1/wallets/{wallet_id}/operation 
 Передав id в параметрах ресурса
-   - **{
+
+   
+- **{
   "operation_type": "DEPOSIT",
   "amount": 1
 }**
-   - **{
+
+- -**{
   "operation_type": "WITHDRAW",
   "amount": 1
 }**
 
+5. Получите информацию о кошельке по ресурсу GET /api/v1/wallets/{wallet_id}/
+ - **{
+  "balance": "0.00",
+  "username": "Name"
+}**
