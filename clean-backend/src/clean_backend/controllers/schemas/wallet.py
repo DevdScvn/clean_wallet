@@ -31,7 +31,7 @@ class WalletBalanceRead(BaseModel):
         examples=[Decimal("1000.00")],
         description="Баланс (денежная сумма)",
     )
-    username: str = Field(examples=["nikita"])
+    username: str = Field(examples=["Name"])
 
 
 class WalletOperationBody(BaseModel):
