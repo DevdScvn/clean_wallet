@@ -88,6 +88,7 @@ services:
         BACKEND__BROKER__RABBIT__VIRTUALHOST: /
         BACKEND__BROKER__RABBIT__USERNAME: guest
         BACKEND__BROKER__RABBIT__PASSWORD: guest
+    command: faststream run clean_backend/fs_serve_app:faststream_app
     depends_on:
       app:
         condition: service_healthy
